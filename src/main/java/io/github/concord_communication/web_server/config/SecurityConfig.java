@@ -20,7 +20,8 @@ public class SecurityConfig {
 	@Bean
 	public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, TokenService tokenService) {
 		return http.authorizeExchange()
-				.pathMatchers("/api/tokens/**").permitAll()
+				.pathMatchers("/client").permitAll()
+				.pathMatchers("/api/tokens/**", "/api/users").permitAll()
 				.anyExchange().authenticated()
 				.and()
 				.addFilterAt(new JwtAuthenticationFilter(tokenService), SecurityWebFiltersOrder.HTTP_BASIC)

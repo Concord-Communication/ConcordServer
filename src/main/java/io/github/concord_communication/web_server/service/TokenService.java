@@ -26,8 +26,10 @@ public class TokenService {
 	private PrivateKey privateKey = null;
 
 	public String createToken(Authentication auth) {
+		User user = (User) auth.getPrincipal();
 		return Jwts.builder()
-				.setSubject(auth.getName())
+				.setSubject(user.getUsername())
+				.claim("id", user.getId())
 				.setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)))
 				.setIssuer("Concord")
 				.signWith(getPrivateKey())
@@ -46,7 +48,7 @@ public class TokenService {
 			return null;
 		}
 		var claims = jws.getBody();
-		var user = new User(claims.getSubject(), null);
+		var user = new User(claims.get("id", Long.class), claims.getSubject(), null);
 		return new UsernamePasswordAuthenticationToken(user, token, new ArrayList<>());
 	}
 
