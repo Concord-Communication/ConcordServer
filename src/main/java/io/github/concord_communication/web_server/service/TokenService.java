@@ -1,11 +1,7 @@
 package io.github.concord_communication.web_server.service;
 
 import io.github.concord_communication.web_server.model.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import lombok.RequiredArgsConstructor;
+import io.jsonwebtoken.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -21,9 +17,17 @@ import java.util.ArrayList;
 import java.util.Date;
 
 @Service
-@RequiredArgsConstructor
 public class TokenService {
 	private PrivateKey privateKey = null;
+
+	private final JwtParser parser;
+
+	public TokenService() {
+		this.parser = Jwts.parserBuilder()
+				.requireIssuer("Concord")
+				.setSigningKey(getPrivateKey())
+				.build();
+	}
 
 	public String createToken(Authentication auth) {
 		User user = (User) auth.getPrincipal();
@@ -39,11 +43,7 @@ public class TokenService {
 	public Authentication getAuthentication(String token) {
 		Jws<Claims> jws;
 		try {
-			jws = Jwts.parserBuilder()
-					.requireIssuer("Concord")
-					.setSigningKey(getPrivateKey())
-					.build()
-					.parseClaimsJws(token);
+			jws = this.parser.parseClaimsJws(token);
 		} catch (ExpiredJwtException e) {
 			return null;
 		}

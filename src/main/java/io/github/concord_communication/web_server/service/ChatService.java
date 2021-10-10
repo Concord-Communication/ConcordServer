@@ -7,6 +7,7 @@ import io.github.concord_communication.web_server.dao.ChannelRepository;
 import io.github.concord_communication.web_server.dao.ChatRepository;
 import io.github.concord_communication.web_server.model.Chat;
 import io.github.concord_communication.web_server.model.User;
+import io.github.concord_communication.web_server.service.websocket.WebSocketBroadcastService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ public class ChatService {
 	private final ChatRepository chatRepository;
 	private final ChannelRepository channelRepository;
 	private final SnowflakeIdGenerator idGenerator;
+	private final WebSocketBroadcastService broadcastService;
 
 	public Mono<ChatResponse> getChat(long chatId) {
 		return this.chatRepository.findById(chatId)
@@ -42,7 +44,10 @@ public class ChatService {
 							data.content()
 					)))
 					.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown channel id.")));
-		}).map(ChatResponse::new);
+		}).map(chat -> {
+			this.broadcastService.send(chat);
+			return new ChatResponse(chat);
+		});
 	}
 
 	public Flux<ChatResponse> getLatest(long channelId) {

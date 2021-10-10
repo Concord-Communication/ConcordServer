@@ -1,10 +1,10 @@
-package io.github.concord_communication.web_server;
+package io.github.concord_communication.web_server.service.websocket;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.server.reactive.AbstractServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
-import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.HandshakeInfo;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.adapter.NettyWebSocketSessionSupport;
@@ -16,8 +16,8 @@ import reactor.netty.http.server.HttpServerResponse;
 
 import java.util.function.Supplier;
 
-@Component
-public class WebSocketAuthenticationService implements RequestUpgradeStrategy {
+@Slf4j
+public class WebSocketAuthenticationStrategy implements RequestUpgradeStrategy {
 	/**
 	 * Upgrade to a WebSocket session and handle it with the given handler.
 	 *
@@ -31,10 +31,12 @@ public class WebSocketAuthenticationService implements RequestUpgradeStrategy {
 	 */
 	@Override
 	public Mono<Void> upgrade(ServerWebExchange exchange, WebSocketHandler webSocketHandler, String subProtocol, Supplier<HandshakeInfo> handshakeInfoFactory) {
+		log.info("Handling websocket upgrade {}.", handshakeInfoFactory.get().getUri());
 		var handshakeInfo = handshakeInfoFactory.get();
 		var response = exchange.getResponse();
 		var reactorResponse = getNativeResponse(response);
 		return reactorResponse.sendWebsocket((websocketInbound, websocketOutbound) -> {
+			System.out.println("sending websocket...");
 			ReactorNettyWebSocketSession session = new ReactorNettyWebSocketSession(
 					websocketInbound,
 					websocketOutbound,
