@@ -1,18 +1,25 @@
 
-const token = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhbmRyZXc1IiwiaWQiOjIzNDk4MjUxMzc5MTk5NTkwNCwiZXhwIjoxNjMzOTAyMjAyLCJpc3MiOiJDb25jb3JkIn0.SLJhwmL8MhubT4MzvaRasbY2Fo2yYTViL5GEbjXWtdfG1tISseGwSjp6Jbuk3aAj4_k_wzxyXLjg_P6CJu9qzmYqKtzthirTXxzH6rNGT_sr8akVXLwionRI1ntQ7O81Rk6x8IuI3Z5CjmC_w520GdXJKFpWWW1KZ1U1NlPU58NF53xtA3HMMx_VSFc-gUHCVMmWylZV3JfguVfxA_kfcsDiykwzoG1zcSTbU5ORlwgaXXLy2CKrrv9QN0a4oKRctvBIaYiLWcnIpSBPHfZuMIvaQXcd9Tk_pM-Gdl7fp-3gEdrIW86QuHsdsPBzLV5YRaiBubpqz4fJVrvgz4U89Q";
-
-initSocket("ws://localhost:8080/client?token=" + token)
-
-function initSocket(address) {
-    let ws = new WebSocket(address);
-    ws.onopen = () => {
-        console.log("Opened.")
-    };
-    ws.onmessage = (msg) => {
-        console.log("Message received");
-        console.log(msg.data);
-    };
-    ws.onclose = () => {
-        console.log("Closed.");
-    };
-}
+const token = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhbmRyZXc1IiwiaWQiOjIzNDk4MjUxMzc5MTk5NTkwNCwiZXhwIjoxNjM0MDQwNjc5LCJpc3MiOiJDb25jb3JkIn0.Z7fC-pgkApFwqCCxDpfy4GStO6lDLNKlEMGBuzoJBcJJaPf9YeVHgAsv0D4y6B6yDhI-rCBNAmHjWYOf2FsbSfKjr38a2o66RuMzH-nrBPClXohwdUHv7UJjEHW7ZgWAHoabF4bfancnXHgyr5eRoCvDP_Z_J-DcycN1oYeDZMAZOoksVgxE_fnOATBfcXqCgpY-YSnUlK-pK9XWDDamZ9Wf_KfqmqdjbN0c7YJUR-IJzUALaQXG5Hq2Ax-dxFNckadIUqu2fF8ionpW8heEbErIXgn7rluSrr1ADx4yBIXztOwJlTCZ6GPSBNhOhcmdwnJal0xroFxwR6jnX0AEmA";
+let ws = new WebSocket("ws://localhost:8080/client?token=" + token);
+ws.onopen = () => {
+    console.log("Opened websocket connection.");
+    window.setInterval(() => {
+        ws.send(JSON.stringify({
+            "type": "heartbeat"
+        }));
+    }, 10000);
+    window.setInterval(() => {
+        console.log("Sending automated chat message...");
+        ws.send(JSON.stringify({
+            "type": "chat",
+            "channelId": 235009133105909760,
+            "content": "This is an automated message."
+        }));
+    }, 5000);
+};
+ws.onmessage = (msg) => {
+    console.log(msg.data);
+};
+ws.onclose = () => {
+    console.log("Closed.");
+};

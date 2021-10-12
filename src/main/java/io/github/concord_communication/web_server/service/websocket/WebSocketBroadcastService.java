@@ -1,11 +1,13 @@
 package io.github.concord_communication.web_server.service.websocket;
 
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.FluxSink;
 
 import java.util.function.Consumer;
 
-@Service
+/**
+ * A simple service that is able to send objects into a flux sink (basically a
+ * non-blocking queue) that it has consumed.
+ */
 public class WebSocketBroadcastService implements Consumer<FluxSink<Object>> {
 	private FluxSink<Object> sink;
 

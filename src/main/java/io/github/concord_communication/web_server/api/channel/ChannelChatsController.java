@@ -23,8 +23,11 @@ public class ChannelChatsController {
 	private final ChatService chatService;
 
 	@GetMapping
-	public Flux<ChatResponse> getLatestChats(@PathVariable long channelId) {
-		return this.chatService.getLatest(channelId);
+	public Flux<ChatResponse> getLatestChats(
+			@PathVariable long channelId,
+			@RequestParam(required = false, defaultValue = "50") int size
+	) {
+		return this.chatService.getLatest(channelId, size);
 	}
 
 	@PostMapping

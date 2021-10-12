@@ -8,12 +8,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import javax.security.auth.Subject;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 
 @Document
 @Getter
-public class User implements UserDetails {
+public class User implements UserDetails, Principal {
 	@Id
 	private long id;
 
@@ -57,5 +59,34 @@ public class User implements UserDetails {
 	@Override
 	public boolean isEnabled() {
 		return true;
+	}
+
+	/**
+	 * Returns the name of this principal.
+	 *
+	 * @return the name of this principal.
+	 */
+	@Override
+	public String getName() {
+		return this.username;
+	}
+
+	/**
+	 * Returns true if the specified subject is implied by this principal.
+	 *
+	 * @param subject the {@code Subject}
+	 * @return true if {@code subject} is non-null and is
+	 * implied by this principal, or false otherwise.
+	 * @implSpec The default implementation of this method returns true if
+	 * {@code subject} is non-null and contains at least one principal that
+	 * is equal to this principal.
+	 *
+	 * <p>Subclasses may override this with a different implementation, if
+	 * necessary.
+	 * @since 1.8
+	 */
+	@Override
+	public boolean implies(Subject subject) {
+		return Principal.super.implies(subject);
 	}
 }

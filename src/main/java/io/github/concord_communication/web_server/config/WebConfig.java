@@ -1,6 +1,9 @@
 package io.github.concord_communication.web_server.config;
 
 import de.mkammerer.snowflakeid.SnowflakeIdGenerator;
+import io.github.concord_communication.web_server.service.TokenService;
+import io.github.concord_communication.web_server.service.websocket.ClientBroadcastManager;
+import io.github.concord_communication.web_server.service.websocket.ClientMessageHandler;
 import io.github.concord_communication.web_server.service.websocket.ClientSocketHandler;
 import io.github.concord_communication.web_server.service.websocket.WebSocketAuthenticationStrategy;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +26,9 @@ import java.util.Map;
 @EnableWebFlux
 @RequiredArgsConstructor
 public class WebConfig implements WebFluxConfigurer {
-	private final ClientSocketHandler clientSocketHandler;
+	private final TokenService tokenService;
+	private final ClientBroadcastManager clientBroadcastManager;
+	private final ClientMessageHandler clientMessageHandler;
 
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
@@ -36,22 +41,17 @@ public class WebConfig implements WebFluxConfigurer {
 		configurer.addPathPrefix("/api", HandlerTypePredicate.forAnnotation(RestController.class));
 	}
 
+	@Override
+	public WebSocketService getWebSocketService() {
+		return new HandshakeWebSocketService(new WebSocketAuthenticationStrategy(this.tokenService));
+	}
+
 	@Bean
 	public HandlerMapping webSocketHandlerMapping() {
 		var mapping = new SimpleUrlHandlerMapping(Map.of(
-				"/client", this.clientSocketHandler
+				"/client", new ClientSocketHandler(this.clientBroadcastManager, this.clientMessageHandler)
 		));
 		mapping.setOrder(1);
 		return mapping;
-	}
-
-	@Bean
-	public WebSocketService webSocketService() {
-		return new HandshakeWebSocketService(new WebSocketAuthenticationStrategy());
-	}
-
-	@Bean
-	public SnowflakeIdGenerator snowflakeIdGenerator() {
-		return SnowflakeIdGenerator.createDefault(1);
 	}
 }
