@@ -49,8 +49,8 @@ public class ChatService {
 	}
 
 	@Transactional
-	public Mono<Void> sendChatFromWebsocket(long channelId, Long threadId, String content, User user) {
-		return sendChat(channelId, new ChatPayload(System.currentTimeMillis(), content), user)
+	public Mono<Void> sendChatFromWebsocket(long channelId, ChatPayload payload, User user) {
+		return sendChat(channelId, payload, user)
 				.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown channel id.")))
 				.then();
 	}

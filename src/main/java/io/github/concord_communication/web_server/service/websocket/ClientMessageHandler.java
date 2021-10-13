@@ -1,6 +1,7 @@
 package io.github.concord_communication.web_server.service.websocket;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.github.concord_communication.web_server.api.dto.ChatPayload;
 import io.github.concord_communication.web_server.model.User;
 import io.github.concord_communication.web_server.service.ChatService;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +25,13 @@ public class ClientMessageHandler {
 		if (type.equals("heartbeat")) {
 			this.broadcastManager.send(user.getId(), JSON.createObjectNode().put("type", "heartbeat"));
 		} else if (type.equals("chat")) {
-			return this.chatService.sendChatFromWebsocket(
-					msg.get("channelId").asLong(),
-					null,
-					msg.get("content").asText(),
-					user
+			var channelId = msg.get("channelId").asLong();
+			var payload = new ChatPayload(
+					System.currentTimeMillis(),
+					msg.get("threadId").asLong(),
+					msg.get("content").asText()
 			);
+			return this.chatService.sendChatFromWebsocket(channelId, payload, user);
 		}
 		return Mono.empty();
 	}
