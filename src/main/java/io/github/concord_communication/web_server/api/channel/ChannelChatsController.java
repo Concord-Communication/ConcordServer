@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
 public class ChannelChatsController {
 	private final ChatService chatService;
 
-	@GetMapping
+	@GetMapping(path = "/latest")
 	public Flux<ChatResponse> getLatestChats(
 			@PathVariable long channelId,
 			@RequestParam(required = false, defaultValue = "50") int size

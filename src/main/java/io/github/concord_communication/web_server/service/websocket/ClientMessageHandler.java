@@ -9,6 +9,10 @@ import reactor.core.publisher.Mono;
 
 import static io.github.concord_communication.web_server.util.JsonUtils.JSON;
 
+/**
+ * This service is responsible for parsing and handling incoming client messages
+ * that were sent via websocket.
+ */
 @Service
 @RequiredArgsConstructor
 public class ClientMessageHandler {

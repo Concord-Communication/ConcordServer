@@ -12,6 +12,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +31,7 @@ public class ChatService {
 	private final ChannelRepository channelRepository;
 	private final SnowflakeIdGenerator idGenerator;
 	private final ClientBroadcastManager broadcastManager;
+	private final ReactiveMongoTemplate mongoTemplate;
 
 	public Mono<ChatResponse> getChat(long chatId) {
 		return this.chatRepository.findById(chatId)
@@ -72,6 +77,21 @@ public class ChatService {
 	public Flux<ChatResponse> getLatest(long channelId, int size) {
 		return this.chatRepository.findAllByChannelId(channelId, PageRequest.of(0, size, Sort.by(Sort.Order.desc("createdAt"))))
 				.map(ChatResponse::new);
+	}
+
+	public Flux<ChatResponse> searchChats(int page, int size, Long authorId, Long channelId, Long threadId, String textQuery) {
+		Query q = new Query();
+		if (authorId != null) q.addCriteria(Criteria.where("authorId").is(authorId));
+		if (channelId != null) q.addCriteria(Criteria.where("channelId").is(channelId));
+		if (threadId != null) {
+			Long targetValue = threadId == -1 ? null : threadId;
+			q.addCriteria(Criteria.where("threadId").is(targetValue));
+		}
+		if (textQuery != null && !textQuery.isBlank()) {
+			q.addCriteria(TextCriteria.forDefaultLanguage().matchingAny(textQuery));
+		}
+		q.with(PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt"))));
+		return this.mongoTemplate.find(q, Chat.class).map(ChatResponse::new);
 	}
 
 	public Mono<Void> removeChat(long chatId) {
