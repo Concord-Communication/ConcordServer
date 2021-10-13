@@ -23,6 +23,8 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import static io.github.concord_communication.web_server.util.JsonUtils.JSON;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -41,37 +43,26 @@ public class ChatService {
 
 	@Transactional
 	public Mono<ChatResponse> sendChat(long channelId, Mono<ChatPayload> payload, User user) {
-		return payload.flatMap(data -> channelRepository.findById(channelId)
-				.flatMap(channel -> chatRepository.save(new Chat(
-						idGenerator.next(),
-						user.getId(),
-						channel.getId(),
-						null,
-						data.sentAt() == null ? System.currentTimeMillis() : data.sentAt(),
-						data.content()
-				)))
-				.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown channel id.")))).map(chat -> {
-			this.broadcastManager.sendToAll(chat);
-			return new ChatResponse(chat);
-		});
+		return payload.flatMap(data -> sendChat(channelId, data, user))
+				.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown channel id.")))
+				.map(ChatResponse::new);
 	}
 
 	@Transactional
 	public Mono<Void> sendChatFromWebsocket(long channelId, Long threadId, String content, User user) {
-		return this.channelRepository.findById(channelId)
-				.flatMap(channel -> chatRepository.save(new Chat(
-						idGenerator.next(),
-						user.getId(),
-						channelId,
-						threadId,
-						System.currentTimeMillis(),
-						content
-				)))
+		return sendChat(channelId, new ChatPayload(System.currentTimeMillis(), content), user)
 				.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown channel id.")))
-				.flatMap(chat -> {
-					this.broadcastManager.sendToAll(chat);
-					return Mono.empty();
-				});
+				.then();
+	}
+
+	private Mono<Chat> sendChat(long channelId, ChatPayload payload, User author) {
+		return channelRepository.findById(channelId)
+				.flatMap(channel -> chatRepository.save(new Chat(
+						idGenerator.next(), author.getId(), channelId, null,
+						payload.sentAt() == null ? System.currentTimeMillis() : payload.sentAt(),
+						payload.content()
+				)))
+				.doOnSuccess(broadcastManager::sendToAll);
 	}
 
 	public Flux<ChatResponse> getLatest(long channelId, int size) {
@@ -95,6 +86,10 @@ public class ChatService {
 	}
 
 	public Mono<Void> removeChat(long chatId) {
-		return this.chatRepository.deleteById(chatId);
+		return this.chatRepository.deleteById(chatId)
+				.doOnSuccess(unused -> this.broadcastManager.sendToAll(JSON.createObjectNode()
+						.put("type", "chat_deleted")
+						.put("id", chatId)
+				));
 	}
 }
