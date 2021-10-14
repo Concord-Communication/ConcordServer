@@ -8,7 +8,8 @@ public record ChatResponse (
 		long authorId,
 		long channelId,
 		Long threadId,
-		String content
+		String content,
+		boolean edited
 ) {
 	public ChatResponse(Chat chat) {
 		this(
@@ -17,7 +18,8 @@ public record ChatResponse (
 				chat.getAuthorId(),
 				chat.getChannelId(),
 				chat.getThreadId(),
-				chat.getContent()
+				chat.getContent(),
+				chat.isEdited()
 		);
 	}
 }

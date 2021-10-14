@@ -1,12 +1,14 @@
 package io.github.concord_communication.web_server.service;
 
 import de.mkammerer.snowflakeid.SnowflakeIdGenerator;
+import io.github.concord_communication.web_server.api.dto.ChatEditPayload;
 import io.github.concord_communication.web_server.api.dto.ChatPayload;
 import io.github.concord_communication.web_server.api.dto.ChatResponse;
 import io.github.concord_communication.web_server.dao.ChannelRepository;
 import io.github.concord_communication.web_server.dao.ChatRepository;
 import io.github.concord_communication.web_server.model.Chat;
 import io.github.concord_communication.web_server.model.User;
+import io.github.concord_communication.web_server.model.websocket.ChatMessages;
 import io.github.concord_communication.web_server.service.websocket.ClientBroadcastManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,9 +64,32 @@ public class ChatService {
 						payload.sentAt() == null ? System.currentTimeMillis() : payload.sentAt(),
 						payload.content()
 				)))
-				.doOnSuccess(broadcastManager::sendToAll);
+				.doOnSuccess(chat -> broadcastManager.sendToAll(new ChatMessages.Sent(chat)));
 	}
 
+	@Transactional
+	public Mono<ChatResponse> editChat(long chatId, Mono<ChatEditPayload> payloadMono, User user) {
+		return payloadMono.flatMap(payload -> chatRepository.findById(chatId)
+				.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Chat not found.")))
+				.filter(chat -> chat.getAuthorId() == user.getId())
+				.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the author can edit a chat message.")))
+				.flatMap(chat -> {
+					chat.setContent(payload.content());
+					chat.setEdited(true);
+					return chatRepository.save(chat);
+				})
+				.doOnSuccess(chat -> broadcastManager.sendToAll(JSON.createObjectNode()
+						.put("type", "chat_edited")
+						.put("id", chatId)))
+				.map(ChatResponse::new));
+	}
+
+	/**
+	 * Gets the latest chats from a channel.
+	 * @param channelId The id of the channel to fetch chats from.
+	 * @param size The number of chats to return.
+	 * @return A page of chats.
+	 */
 	public Flux<ChatResponse> getLatest(long channelId, int size) {
 		return this.chatRepository.findAllByChannelId(channelId, PageRequest.of(0, size, Sort.by(Sort.Order.desc("createdAt"))))
 				.map(ChatResponse::new);
@@ -87,9 +112,6 @@ public class ChatService {
 
 	public Mono<Void> removeChat(long chatId) {
 		return this.chatRepository.deleteById(chatId)
-				.doOnSuccess(unused -> this.broadcastManager.sendToAll(JSON.createObjectNode()
-						.put("type", "chat_deleted")
-						.put("id", chatId)
-				));
+				.doOnSuccess(unused -> this.broadcastManager.sendToAll(new ChatMessages.Deleted(chatId)));
 	}
 }

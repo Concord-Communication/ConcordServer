@@ -22,6 +22,10 @@ import reactor.netty.http.server.HttpServerResponse;
 
 import java.util.function.Supplier;
 
+/**
+ * This request upgrade strategy is responsible for authenticating any incoming
+ * websocket request before allowing it to proceed.
+ */
 @Slf4j
 @RequiredArgsConstructor
 public class WebSocketAuthenticationStrategy implements RequestUpgradeStrategy {
@@ -44,7 +48,7 @@ public class WebSocketAuthenticationStrategy implements RequestUpgradeStrategy {
 							handshakeInfo.getUri(),
 							handshakeInfo.getHeaders(),
 							handshakeInfo.getCookies(),
-							Mono.just((User) auth.getPrincipal()),
+							Mono.just(auth),
 							handshakeInfo.getSubProtocol(),
 							handshakeInfo.getRemoteAddress(),
 							handshakeInfo.getAttributes(),

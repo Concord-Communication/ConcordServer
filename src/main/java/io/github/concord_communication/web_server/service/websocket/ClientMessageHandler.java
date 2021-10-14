@@ -1,14 +1,13 @@
 package io.github.concord_communication.web_server.service.websocket;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.github.concord_communication.web_server.api.dto.ChatPayload;
-import io.github.concord_communication.web_server.model.User;
+import io.github.concord_communication.web_server.model.websocket.ChatMessages;
+import io.github.concord_communication.web_server.model.websocket.ClientMessageEvent;
+import io.github.concord_communication.web_server.model.websocket.Heartbeat;
 import io.github.concord_communication.web_server.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
-import static io.github.concord_communication.web_server.util.JsonUtils.JSON;
 
 /**
  * This service is responsible for parsing and handling incoming client messages
@@ -20,19 +19,26 @@ public class ClientMessageHandler {
 	private final ClientBroadcastManager broadcastManager;
 	private final ChatService chatService;
 
-	public Mono<Void> handle(User user, JsonNode msg) {
-		String type = msg.get("type").asText();
-		if (type.equals("heartbeat")) {
-			this.broadcastManager.send(user.getId(), JSON.createObjectNode().put("type", "heartbeat"));
-		} else if (type.equals("chat")) {
-			var channelId = msg.get("channelId").asLong();
-			var payload = new ChatPayload(
-					System.currentTimeMillis(),
-					msg.get("threadId").asLong(),
-					msg.get("content").asText()
-			);
-			return this.chatService.sendChatFromWebsocket(channelId, payload, user);
+	public Mono<Void> handle(ClientMessageEvent event) {
+		switch (event.type()) {
+			case "heartbeat" -> {
+				broadcastManager.send(event.user().getId(), new Heartbeat(System.currentTimeMillis()));
+				return Mono.empty();
+			}
+			case "chat_written" -> {
+				ChatMessages.Written chat = event.getMessage();
+				return chatService.sendChatFromWebsocket(chat.channelId(), new ChatPayload(chat.sentAt(), chat.threadId(), chat.content()), event.user());
+			}
+			case "chat_typing" -> {
+				ChatMessages.Typing typing = event.getMessage();
+				broadcastManager.sendToAll(new ChatMessages.Typing(event.user().getId(), typing.channelId(), typing.threadId(), typing.sentAt()));
+				return Mono.empty();
+			}
 		}
 		return Mono.empty();
 	}
+
+
+
+
 }
