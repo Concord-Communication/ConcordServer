@@ -7,7 +7,7 @@ import io.github.concord_communication.web_server.api.dto.ChatResponse;
 import io.github.concord_communication.web_server.dao.ChannelRepository;
 import io.github.concord_communication.web_server.dao.ChatRepository;
 import io.github.concord_communication.web_server.model.Chat;
-import io.github.concord_communication.web_server.model.User;
+import io.github.concord_communication.web_server.model.user.User;
 import io.github.concord_communication.web_server.model.websocket.ChatMessages;
 import io.github.concord_communication.web_server.service.websocket.ClientBroadcastManager;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +25,10 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import static io.github.concord_communication.web_server.util.JsonUtils.JSON;
-
+/**
+ * This service is responsible for handling updates and requests pertaining to
+ * the set of chat messages in the server.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -41,6 +43,32 @@ public class ChatService {
 		return this.chatRepository.findById(chatId)
 				.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Chat not found.")))
 				.map(ChatResponse::new);
+	}
+
+	/**
+	 * Gets the latest chats from a channel.
+	 * @param channelId The id of the channel to fetch chats from.
+	 * @param size The number of chats to return.
+	 * @return A page of chats.
+	 */
+	public Flux<ChatResponse> getLatest(long channelId, int size) {
+		return this.chatRepository.findAllByChannelId(channelId, PageRequest.of(0, size, Sort.by(Sort.Order.desc("createdAt"))))
+				.map(ChatResponse::new);
+	}
+
+	public Flux<ChatResponse> searchChats(int page, int size, Long authorId, Long channelId, Long threadId, String textQuery) {
+		Query q = new Query();
+		if (authorId != null) q.addCriteria(Criteria.where("authorId").is(authorId));
+		if (channelId != null) q.addCriteria(Criteria.where("channelId").is(channelId));
+		if (threadId != null) {
+			Long targetValue = threadId == -1 ? null : threadId;
+			q.addCriteria(Criteria.where("threadId").is(targetValue));
+		}
+		if (textQuery != null && !textQuery.isBlank()) {
+			q.addCriteria(TextCriteria.forDefaultLanguage().matchingAny(textQuery));
+		}
+		q.with(PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt"))));
+		return this.mongoTemplate.find(q, Chat.class).map(ChatResponse::new);
 	}
 
 	@Transactional
@@ -78,36 +106,8 @@ public class ChatService {
 					chat.setEdited(true);
 					return chatRepository.save(chat);
 				})
-				.doOnSuccess(chat -> broadcastManager.sendToAll(JSON.createObjectNode()
-						.put("type", "chat_edited")
-						.put("id", chatId)))
+				.doOnSuccess(chat -> broadcastManager.sendToAll(new ChatMessages.Updated(chatId, chat.getContent())))
 				.map(ChatResponse::new));
-	}
-
-	/**
-	 * Gets the latest chats from a channel.
-	 * @param channelId The id of the channel to fetch chats from.
-	 * @param size The number of chats to return.
-	 * @return A page of chats.
-	 */
-	public Flux<ChatResponse> getLatest(long channelId, int size) {
-		return this.chatRepository.findAllByChannelId(channelId, PageRequest.of(0, size, Sort.by(Sort.Order.desc("createdAt"))))
-				.map(ChatResponse::new);
-	}
-
-	public Flux<ChatResponse> searchChats(int page, int size, Long authorId, Long channelId, Long threadId, String textQuery) {
-		Query q = new Query();
-		if (authorId != null) q.addCriteria(Criteria.where("authorId").is(authorId));
-		if (channelId != null) q.addCriteria(Criteria.where("channelId").is(channelId));
-		if (threadId != null) {
-			Long targetValue = threadId == -1 ? null : threadId;
-			q.addCriteria(Criteria.where("threadId").is(targetValue));
-		}
-		if (textQuery != null && !textQuery.isBlank()) {
-			q.addCriteria(TextCriteria.forDefaultLanguage().matchingAny(textQuery));
-		}
-		q.with(PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt"))));
-		return this.mongoTemplate.find(q, Chat.class).map(ChatResponse::new);
 	}
 
 	public Mono<Void> removeChat(long chatId) {

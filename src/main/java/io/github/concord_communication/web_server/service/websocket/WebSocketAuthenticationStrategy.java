@@ -1,6 +1,5 @@
 package io.github.concord_communication.web_server.service.websocket;
 
-import io.github.concord_communication.web_server.model.User;
 import io.github.concord_communication.web_server.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

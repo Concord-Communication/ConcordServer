@@ -1,6 +1,6 @@
-package io.github.concord_communication.web_server.api.dto;
+package io.github.concord_communication.web_server.api.user.dto;
 
-import io.github.concord_communication.web_server.model.User;
+import io.github.concord_communication.web_server.model.user.User;
 
 public record UserResponse(
 		long id,

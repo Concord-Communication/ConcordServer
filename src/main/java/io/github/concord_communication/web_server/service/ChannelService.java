@@ -6,7 +6,7 @@ import io.github.concord_communication.web_server.api.dto.ChannelResponse;
 import io.github.concord_communication.web_server.dao.ChannelRepository;
 import io.github.concord_communication.web_server.dao.ChatRepository;
 import io.github.concord_communication.web_server.model.Channel;
-import io.github.concord_communication.web_server.model.User;
+import io.github.concord_communication.web_server.model.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;

@@ -1,7 +1,8 @@
-package io.github.concord_communication.web_server.api;
+package io.github.concord_communication.web_server.api.user;
 
-import io.github.concord_communication.web_server.api.dto.UserRegistrationPayload;
-import io.github.concord_communication.web_server.api.dto.UserResponse;
+import io.github.concord_communication.web_server.api.user.dto.ProfileResponse;
+import io.github.concord_communication.web_server.api.user.dto.UserRegistrationPayload;
+import io.github.concord_communication.web_server.api.user.dto.UserResponse;
 import io.github.concord_communication.web_server.dao.UserRepository;
 import io.github.concord_communication.web_server.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -31,5 +32,10 @@ public class UsersController {
 	@GetMapping(path = "/{userId}")
 	public Mono<UserResponse> getUser(@PathVariable long userId) {
 		return this.userService.getUser(userId);
+	}
+
+	@GetMapping(path = "/{userId}/profile")
+	public Mono<ProfileResponse> getProfile(@PathVariable long userId) {
+		return this.userService.getProfile(userId);
 	}
 }

@@ -1,6 +1,6 @@
 package io.github.concord_communication.web_server.service;
 
-import io.github.concord_communication.web_server.model.User;
+import io.github.concord_communication.web_server.model.user.User;
 import io.jsonwebtoken.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

@@ -2,7 +2,7 @@ package io.github.concord_communication.web_server.api.chat;
 
 import io.github.concord_communication.web_server.api.dto.ChatEditPayload;
 import io.github.concord_communication.web_server.api.dto.ChatResponse;
-import io.github.concord_communication.web_server.model.User;
+import io.github.concord_communication.web_server.model.user.User;
 import io.github.concord_communication.web_server.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

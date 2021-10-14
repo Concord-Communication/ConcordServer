@@ -1,6 +1,6 @@
-package io.github.concord_communication.web_server.api;
+package io.github.concord_communication.web_server.api.user;
 
-import io.github.concord_communication.web_server.api.dto.UsernamePasswordPayload;
+import io.github.concord_communication.web_server.api.user.dto.UsernamePasswordPayload;
 import io.github.concord_communication.web_server.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

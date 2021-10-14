@@ -1,4 +1,4 @@
-package io.github.concord_communication.web_server.model;
+package io.github.concord_communication.web_server.model.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;

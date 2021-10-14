@@ -2,7 +2,7 @@ package io.github.concord_communication.web_server.api.channel;
 
 import io.github.concord_communication.web_server.api.dto.ChannelCreationPayload;
 import io.github.concord_communication.web_server.api.dto.ChannelResponse;
-import io.github.concord_communication.web_server.model.User;
+import io.github.concord_communication.web_server.model.user.User;
 import io.github.concord_communication.web_server.service.ChannelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
