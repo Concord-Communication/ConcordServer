@@ -1,6 +1,5 @@
 package io.github.concord_communication.web_server.config;
 
-import de.mkammerer.snowflakeid.SnowflakeIdGenerator;
 import io.github.concord_communication.web_server.service.TokenService;
 import io.github.concord_communication.web_server.service.websocket.ClientBroadcastManager;
 import io.github.concord_communication.web_server.service.websocket.ClientMessageHandler;
@@ -33,7 +32,9 @@ public class WebConfig implements WebFluxConfigurer {
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
 		registry.addMapping("/**")
-				.allowedOrigins("*");
+				.allowedOrigins("*")
+				.allowedMethods("*")
+				.allowedHeaders("*");
 	}
 
 	@Override

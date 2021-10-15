@@ -1,9 +1,7 @@
 package io.github.concord_communication.web_server.service;
 
 import de.mkammerer.snowflakeid.SnowflakeIdGenerator;
-import io.github.concord_communication.web_server.api.dto.ChatEditPayload;
-import io.github.concord_communication.web_server.api.dto.ChatPayload;
-import io.github.concord_communication.web_server.api.dto.ChatResponse;
+import io.github.concord_communication.web_server.api.dto.*;
 import io.github.concord_communication.web_server.dao.ChannelRepository;
 import io.github.concord_communication.web_server.dao.ChatRepository;
 import io.github.concord_communication.web_server.model.Chat;
@@ -24,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.HashSet;
 
 /**
  * This service is responsible for handling updates and requests pertaining to
@@ -113,5 +113,30 @@ public class ChatService {
 	public Mono<Void> removeChat(long chatId) {
 		return this.chatRepository.deleteById(chatId)
 				.doOnSuccess(unused -> this.broadcastManager.sendToAll(new ChatMessages.Deleted(chatId)));
+	}
+
+	public Mono<ReactionsResponse> getReactions(long chatId) {
+		return chatRepository.findById(chatId)
+				.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Chat not found.")))
+				.map(chat -> new ReactionsResponse(chat.getReactions(), chat.getReactionCounts()));
+	}
+
+	@Transactional
+	public Mono<Void> addReaction(long chatId, Mono<ReactionPayload> payload, User user) {
+		return payload.flatMap(data -> chatRepository.findById(chatId)
+				.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Chat not found.")))
+				.flatMap(chat -> {
+					var reactionUserIds = chat.getReactions().computeIfAbsent(data.reaction(), r -> new HashSet<>());
+					if (data.adding()) {
+						reactionUserIds.add(user.getId());
+					} else {
+						reactionUserIds.remove(user.getId());
+						if (reactionUserIds.isEmpty()) {
+							chat.getReactions().remove(data.reaction());
+						}
+					}
+					return chatRepository.save(chat);
+				}).then()
+		);
 	}
 }

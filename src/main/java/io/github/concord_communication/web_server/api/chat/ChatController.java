@@ -2,6 +2,8 @@ package io.github.concord_communication.web_server.api.chat;
 
 import io.github.concord_communication.web_server.api.dto.ChatEditPayload;
 import io.github.concord_communication.web_server.api.dto.ChatResponse;
+import io.github.concord_communication.web_server.api.dto.ReactionPayload;
+import io.github.concord_communication.web_server.api.dto.ReactionsResponse;
 import io.github.concord_communication.web_server.model.user.User;
 import io.github.concord_communication.web_server.service.ChatService;
 import lombok.RequiredArgsConstructor;
@@ -35,5 +37,19 @@ public class ChatController {
 	@DeleteMapping
 	public Mono<Void> removeChat(@PathVariable long chatId) {
 		return this.chatService.removeChat(chatId);
+	}
+
+	@GetMapping(path = "/reactions")
+	public Mono<ReactionsResponse> getReactions(@PathVariable long chatId) {
+		return this.chatService.getReactions(chatId);
+	}
+
+	@PostMapping(path = "/reactions")
+	public Mono<Void> addReaction(
+			@PathVariable long chatId,
+			@RequestBody Mono<ReactionPayload> payload,
+			@AuthenticationPrincipal User user
+	) {
+		return this.chatService.addReaction(chatId, payload, user);
 	}
 }

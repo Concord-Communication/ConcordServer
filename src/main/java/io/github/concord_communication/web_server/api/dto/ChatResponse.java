@@ -2,6 +2,8 @@ package io.github.concord_communication.web_server.api.dto;
 
 import io.github.concord_communication.web_server.model.Chat;
 
+import java.util.Map;
+
 public record ChatResponse (
 		long id,
 		long createdAt,
@@ -9,7 +11,8 @@ public record ChatResponse (
 		long channelId,
 		Long threadId,
 		String content,
-		boolean edited
+		boolean edited,
+		Map<String, Integer> reactions
 ) {
 	public ChatResponse(Chat chat) {
 		this(
@@ -19,7 +22,8 @@ public record ChatResponse (
 				chat.getChannelId(),
 				chat.getThreadId(),
 				chat.getContent(),
-				chat.isEdited()
+				chat.isEdited(),
+				chat.getReactionCounts()
 		);
 	}
 }

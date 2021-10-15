@@ -20,12 +20,16 @@ public class SecurityConfig {
 	@Bean
 	public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, TokenService tokenService) {
 		return http.authorizeExchange()
+				// Disable standard authentication for the websocket client endpoint, since it handles authentication itself.
 				.pathMatchers("/client").permitAll()
+				// Disable authentication for token endpoints, since unauthenticated users get tokens via these.
 				.pathMatchers("/api/tokens/**", "/api/users").permitAll()
+				// Require authentication for all other endpoints.
 				.anyExchange().authenticated()
 				.and()
 				.addFilterAt(new JwtAuthenticationFilter(tokenService), SecurityWebFiltersOrder.HTTP_BASIC)
 				.csrf().disable()
+				.cors().and()
 				.httpBasic().disable()
 				.logout().disable()
 				.build();
