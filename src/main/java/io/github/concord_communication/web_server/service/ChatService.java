@@ -106,13 +106,14 @@ public class ChatService {
 					chat.setEdited(true);
 					return chatRepository.save(chat);
 				})
-				.doOnSuccess(chat -> broadcastManager.sendToAll(new ChatMessages.Updated(chatId, chat.getContent())))
+				.doOnSuccess(chat -> broadcastManager.sendToAll(new ChatMessages.Edited(chat)))
 				.map(ChatResponse::new));
 	}
 
 	public Mono<Void> removeChat(long chatId) {
-		return this.chatRepository.deleteById(chatId)
-				.doOnSuccess(unused -> this.broadcastManager.sendToAll(new ChatMessages.Deleted(chatId)));
+		return this.chatRepository.findById(chatId)
+				.flatMap(chat -> this.chatRepository.delete(chat)
+						.doOnSuccess(unused -> this.broadcastManager.sendToAll(new ChatMessages.Deleted(chat))));
 	}
 
 	public Mono<ReactionsResponse> getReactions(long chatId) {
@@ -135,7 +136,8 @@ public class ChatService {
 							chat.getReactions().remove(data.reaction());
 						}
 					}
-					return chatRepository.save(chat);
+					return chatRepository.save(chat)
+							.doOnSuccess(c -> this.broadcastManager.sendToAll(new ChatMessages.ReactionsUpdated(c)));
 				}).then()
 		);
 	}

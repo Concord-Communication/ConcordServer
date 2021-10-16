@@ -38,7 +38,7 @@ public class ClientSocketHandler implements WebSocketHandler {
 
 	private final static Map<String, Class<?>> messageTypes = new HashMap<>();
 	static {// Register all possible message types that clients can send.
-		registerTypes(Heartbeat.class, ChatMessages.Written.class);
+		registerTypes(Heartbeat.class, ChatMessages.Written.class, ChatMessages.Typing.class, ChatMessages.Reaction.class);
 	}
 
 	private final ClientBroadcastManager broadcastManager;

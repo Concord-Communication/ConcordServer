@@ -1,6 +1,7 @@
 package io.github.concord_communication.web_server.service.websocket;
 
 import io.github.concord_communication.web_server.api.dto.ChatPayload;
+import io.github.concord_communication.web_server.api.dto.ReactionPayload;
 import io.github.concord_communication.web_server.model.websocket.ChatMessages;
 import io.github.concord_communication.web_server.model.websocket.ClientMessageEvent;
 import io.github.concord_communication.web_server.model.websocket.Heartbeat;
@@ -33,6 +34,11 @@ public class ClientMessageHandler {
 				ChatMessages.Typing typing = event.getMessage();
 				broadcastManager.sendToAll(new ChatMessages.Typing(event.user().getId(), typing.channelId(), typing.threadId(), typing.sentAt()));
 				return Mono.empty();
+			}
+			case "chat_reaction" -> {
+				ChatMessages.Reaction reactionMsg = event.getMessage();
+				var data = Mono.just(new ReactionPayload(reactionMsg.reaction(), reactionMsg.adding()));
+				return this.chatService.addReaction(reactionMsg.chatId(), data, event.user());
 			}
 		}
 		return Mono.empty();

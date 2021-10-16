@@ -1,0 +1,486 @@
+{
+	"info": {
+		"_postman_id": "14b4f026-4775-4b35-87d6-7e03eb8fb039",
+		"name": "Concord Web",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/234982513791995904",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"234982513791995904"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/:userId/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								":userId",
+								"profile"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "1418126549848064"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register New User",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"johnny\",\r\n    \"password\": \"testpass\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Token",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"andrew5\",\r\n    \"password\": \"testpass\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/tokens",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tokens"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Channels",
+			"item": [
+				{
+					"name": "Chat",
+					"item": [
+						{
+							"name": "Send Chat",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"content\": \"Hello world!\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/channels/:channelId/chats",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"channels",
+										":channelId",
+										"chats"
+									],
+									"variable": [
+										{
+											"key": "channelId",
+											"value": "235009133105909760"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Latest Chats",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/channels/:channelId/chats/latest?size=5",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"channels",
+										":channelId",
+										"chats",
+										"latest"
+									],
+									"query": [
+										{
+											"key": "size",
+											"value": "5"
+										}
+									],
+									"variable": [
+										{
+											"key": "channelId",
+											"value": null
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Get All Channels",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/channels",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"channels"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Channel",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"general\",\r\n    \"description\": null\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/channels",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"channels"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Channel",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/channels/:channelId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"channels",
+								":channelId"
+							],
+							"variable": [
+								{
+									"key": "channelId",
+									"value": "235009169420193792"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chat",
+			"item": [
+				{
+					"name": "Search Chats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/chats?page=1&size=5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chats"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "5"
+								},
+								{
+									"key": "authorId",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "channelId",
+									"value": null,
+									"disabled": true
+								},
+								{
+									"key": "threadId",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "query",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Chat",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/chats/:chatId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chats",
+								":chatId"
+							],
+							"variable": [
+								{
+									"key": "chatId",
+									"value": "235023981168562176"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Chat",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/chats/:chatId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chats",
+								":chatId"
+							],
+							"variable": [
+								{
+									"key": "chatId",
+									"value": "235023981168562176"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Edit Chat",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"content\": \"Testing, testing, testing\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/chats/:chatId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chats",
+								":chatId"
+							],
+							"variable": [
+								{
+									"key": "chatId",
+									"value": "235732341228572672"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add/Remove Reaction",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"reaction\": \"😀\",\r\n    \"adding\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/chats/:chatId/reactions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chats",
+								":chatId",
+								"reactions"
+							],
+							"variable": [
+								{
+									"key": "chatId",
+									"value": "1402795546644480"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "localhost:8080/api"
+		},
+		{
+			"key": "access_token",
+			"value": ""
+		},
+		{
+			"key": "current_channel_id",
+			"value": ""
+		}
+	]
+}

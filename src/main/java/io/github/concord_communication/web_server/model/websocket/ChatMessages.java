@@ -1,6 +1,9 @@
 package io.github.concord_communication.web_server.model.websocket;
 
+import io.github.concord_communication.web_server.api.dto.ChatResponse;
 import io.github.concord_communication.web_server.model.Chat;
+
+import java.util.Map;
 
 /**
  * This class contains definitions for websocket messages that are sent to
@@ -25,13 +28,20 @@ public final class ChatMessages {
 	public record Typing(Long userId, long channelId, Long threadId, long sentAt) {}
 
 	/**
+	 * A message that is sent by a client to indicate they are adding a reaction
+	 * to a chat message (or removing it if adding is false).
+	 */
+	@MessageType("chat_reaction")
+	public record Reaction(long chatId, String reaction, boolean adding) {}
+
+	/**
 	 * A message that's sent by the server to all connected clients when a new
 	 * chat message is sent.
 	 */
 	@MessageType("chat_sent")
-	public record Sent(long id, long authorId, long channelId, Long threadId, long createdAt, String content) {
+	public record Sent(ChatResponse chat) {
 		public Sent(Chat c) {
-			this(c.getId(), c.getAuthorId(), c.getChannelId(), c.getThreadId(), c.getCreatedAt(), c.getContent());
+			this(new ChatResponse(c));
 		}
 	}
 
@@ -40,12 +50,31 @@ public final class ChatMessages {
 	 * message is deleted.
 	 */
 	@MessageType("chat_deleted")
-	public record Deleted(long id) {}
+	public record Deleted(long chatId, long channelId, Long threadId) {
+		public Deleted(Chat c) {
+			this(c.getId(), c.getChannelId(), c.getThreadId());
+		}
+	}
 
 	/**
 	 * A message that's sent by the server to all connected clients when a chat
 	 * message is edited by its author.
 	 */
-	@MessageType("chat_updated")
-	public record Updated(long id, String content) {}
+	@MessageType("chat_edited")
+	public record Edited(long chatId, long channelId, Long threadId, String content) {
+		public Edited(Chat c) {
+			this(c.getId(), c.getChannelId(), c.getThreadId(), c.getContent());
+		}
+	}
+
+	/**
+	 * A message that's sent by the server to all connected clients when a chat
+	 * message's reactions are updated.
+	 */
+	@MessageType("chat_reactions_updated")
+	public record ReactionsUpdated(long chatId, long channelId, Long threadId, Map<String, Integer> reactions) {
+		public ReactionsUpdated(Chat c) {
+			this(c.getId(), c.getChannelId(), c.getThreadId(), c.getReactionCounts());
+		}
+	}
 }
