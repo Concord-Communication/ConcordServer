@@ -1,4 +1,11 @@
 package io.github.concord_communication.web_server.api.dto;
 
-public record ChannelCreationPayload(String name, String description) {
-}
+import java.util.Set;
+
+public record ChannelCreationPayload(
+		String name,
+		String description,
+		Long parentChannelId,
+		Integer ordinality,
+		Set<String> capabilities
+) {}
