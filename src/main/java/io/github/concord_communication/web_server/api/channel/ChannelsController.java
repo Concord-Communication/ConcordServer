@@ -2,6 +2,7 @@ package io.github.concord_communication.web_server.api.channel;
 
 import io.github.concord_communication.web_server.api.dto.ChannelCreationPayload;
 import io.github.concord_communication.web_server.api.dto.ChannelResponse;
+import io.github.concord_communication.web_server.api.dto.FullChannelResponse;
 import io.github.concord_communication.web_server.model.user.User;
 import io.github.concord_communication.web_server.service.ChannelService;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +18,8 @@ public class ChannelsController {
 	private final ChannelService channelService;
 
 	@GetMapping
-	public Flux<ChannelResponse> getAllChannels() {
-		return this.channelService.getAll();
+	public Flux<FullChannelResponse> getAllChannels() {
+		return this.channelService.getAllRecursive();
 	}
 
 	@GetMapping(path = "/{channelId}")
