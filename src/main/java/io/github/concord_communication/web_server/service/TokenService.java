@@ -34,7 +34,7 @@ public class TokenService {
 		return Jwts.builder()
 				.setSubject(user.getUsername())
 				.claim("id", user.getId())
-				.setExpiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)))
+				.setExpiration(Date.from(Instant.now().plus(30, ChronoUnit.DAYS)))
 				.setIssuer("Concord")
 				.signWith(getPrivateKey())
 				.compact();
