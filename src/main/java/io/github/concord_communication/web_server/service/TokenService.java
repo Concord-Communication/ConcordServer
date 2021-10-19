@@ -2,6 +2,7 @@ package io.github.concord_communication.web_server.service;
 
 import io.github.concord_communication.web_server.model.user.User;
 import io.jsonwebtoken.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -16,9 +17,16 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 
+/**
+ * This service is responsible for issuing and managing access tokens for all
+ * users.
+ */
 @Service
 public class TokenService {
 	private PrivateKey privateKey = null;
+
+	@Value("${concord.auth.token-validity-days}")
+	private long tokenValidity;
 
 	private final JwtParser parser;
 
@@ -34,7 +42,7 @@ public class TokenService {
 		return Jwts.builder()
 				.setSubject(user.getUsername())
 				.claim("id", user.getId())
-				.setExpiration(Date.from(Instant.now().plus(30, ChronoUnit.DAYS)))
+				.setExpiration(Date.from(Instant.now().plus(this.tokenValidity, ChronoUnit.DAYS)))
 				.setIssuer("Concord")
 				.signWith(getPrivateKey())
 				.compact();

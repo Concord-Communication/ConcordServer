@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "concord.auth.token-validity-days",
+      "type": "java.lang.Long",
+      "description": "The number of days for which tokens issued by this server are valid."
+    }
+  ]
+}
