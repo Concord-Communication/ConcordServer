@@ -24,4 +24,8 @@ public class WebSocketBroadcastService implements Consumer<FluxSink<Object>> {
 			this.sink.next(obj);
 		}
 	}
+
+	public void complete() {
+		this.sink.complete();
+	}
 }

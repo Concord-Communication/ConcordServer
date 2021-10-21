@@ -31,4 +31,11 @@ public class ClientBroadcastManager {
 			service.send(msg);
 		}
 	}
+
+	public void closeConnection(Long userId) {
+		var service = userBroadcastServices.get(userId);
+		if (service != null) {
+			service.complete();
+		}
+	}
 }

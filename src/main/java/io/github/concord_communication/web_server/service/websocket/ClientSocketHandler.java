@@ -6,10 +6,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.concord_communication.web_server.model.user.User;
-import io.github.concord_communication.web_server.model.websocket.ChatMessages;
-import io.github.concord_communication.web_server.model.websocket.ClientMessageEvent;
-import io.github.concord_communication.web_server.model.websocket.Heartbeat;
-import io.github.concord_communication.web_server.model.websocket.MessageType;
+import io.github.concord_communication.web_server.model.websocket.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.reactive.socket.WebSocketHandler;
@@ -19,6 +16,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,8 +41,8 @@ public class ClientSocketHandler implements WebSocketHandler {
 
 	private final ClientBroadcastManager broadcastManager;
 	private final ClientMessageHandler messageHandler;
-
 	private final Flux<Object> globalMessageFlux;
+
 
 	public ClientSocketHandler(ClientBroadcastManager broadcastManager, ClientMessageHandler messageHandler) {
 		this.broadcastManager = broadcastManager;
@@ -73,19 +71,22 @@ public class ClientSocketHandler implements WebSocketHandler {
 	 */
 	private Mono<Void> prepareClientCommunication(WebSocketSession session, User user) {
 		var userMessageFlux = this.broadcastManager.createUserMessageFlux(user.getId());
-		return Mono.when(
-				// Continuously send messages from the global message flux.
-				session.send(this.globalMessageFlux.map(o -> serialize(o, session))),
-				// Continuously send messages from the user's personal message flux.
-				session.send(userMessageFlux.map(o -> serialize(o, session))),
-				// Handle any messages the user sends.
-				session.receive().flatMap(msg -> deserialize(msg, user)).flatMap(this.messageHandler::handle),
-				Mono.fromRunnable(() -> {
-					log.info("Sending init messages.");
-					this.broadcastManager.send(user.getId(), "Hello");
-					this.broadcastManager.sendToAll("Everyone, please welcome " + user.getUsername());
-				})
-		).thenEmpty(s -> log.info("User {} has disconnected.", user.getUsername()));
+		this.messageHandler.getHeartbeatMonitor().beginTracking(user.getId(), session);
+		Mono<Void> globalMessageSending = session.send(this.globalMessageFlux.map(o -> serialize(o, session)));
+		Mono<Void> personalMessageSending = session.send(Flux.merge(
+				userMessageFlux,
+				Flux.interval(Duration.ofSeconds(10)).flatMap(x -> sendHeartbeat(user.getId()))
+		).map(o -> serialize(o, session)));
+		Flux<Void> messageReceiving = session.receive().flatMap(msg -> deserialize(msg, user)).flatMap(this.messageHandler::handle);
+		Mono<Void> initialMessageSending = Mono.fromRunnable(() -> {
+			this.broadcastManager.sendToAll(new UserMessages.StatusUpdated(user.getId(), "online"));
+		});
+		// TODO: Figure out how to terminate message receiving when heartbeat timeout is reached.
+		return Mono.when(globalMessageSending, personalMessageSending, messageReceiving, initialMessageSending)
+				.doAfterTerminate(() -> {
+					messageHandler.getHeartbeatMonitor().endTracking(user.getId());
+					log.info("User {} has disconnected.", user.getUsername());
+				});
 	}
 
 	private static WebSocketMessage serialize(Object obj, WebSocketSession session) {
@@ -107,7 +108,10 @@ public class ClientSocketHandler implements WebSocketHandler {
 		return Mono.fromCallable(() -> {
 			JsonNode node = reader.readTree(msg.getPayloadAsText());
 			var typeNode = node.get("type");
-			if (typeNode.isMissingNode() || !typeNode.isTextual()) return null;
+			if (typeNode == null || typeNode.isMissingNode() || !typeNode.isTextual()) {
+				log.warn("Missing or non-textual message type received.");
+				return null;
+			}
 			String type = typeNode.asText();
 			var messageType = messageTypes.get(type);
 			if (messageType == null) return null;
@@ -118,6 +122,12 @@ public class ClientSocketHandler implements WebSocketHandler {
 				return null;
 			}
 		});
+	}
+
+	private Mono<Object> sendHeartbeat(long userId) {
+		log.info("Sending heartbeat to {}", userId);
+		long now = System.currentTimeMillis();
+		return Mono.just(new Heartbeat(now));
 	}
 
 	private static void registerTypes(Class<?>... types) {

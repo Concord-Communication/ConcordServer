@@ -4,6 +4,11 @@
       "name": "concord.auth.token-validity-days",
       "type": "java.lang.Long",
       "description": "The number of days for which tokens issued by this server are valid."
+    },
+    {
+      "name": "concord.socket.heartbeat-timeout-seconds",
+      "type": "java.lang.Long",
+      "description": "A number of seconds that must pass with no heartbeat response from a connected client to consider them inactive."
     }
   ]
 }
