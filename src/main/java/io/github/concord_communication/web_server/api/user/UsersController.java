@@ -1,9 +1,8 @@
 package io.github.concord_communication.web_server.api.user;
 
-import io.github.concord_communication.web_server.api.user.dto.ProfileResponse;
+import io.github.concord_communication.web_server.api.user.dto.FullUserResponse;
 import io.github.concord_communication.web_server.api.user.dto.UserRegistrationPayload;
 import io.github.concord_communication.web_server.api.user.dto.UserResponse;
-import io.github.concord_communication.web_server.dao.UserRepository;
 import io.github.concord_communication.web_server.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,26 +15,25 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @Slf4j
 public class UsersController {
-	private final UserRepository userRepository;
 	private final UserService userService;
 
 	@GetMapping
-	public Flux<UserResponse> getUsers() {
-		return this.userRepository.findAll().map(UserResponse::new);
+	public Flux<FullUserResponse> getUsers() {
+		return this.userService.getUsers();
 	}
 
-	@PostMapping
+	/**
+	 * Endpoint for registering a new user account for this server.
+	 * @param payload The user's registration data.
+	 * @return A registration response.
+	 */
+	@PostMapping(path = "/register")
 	public Mono<UserResponse> registerNewUser(@RequestBody Mono<UserRegistrationPayload> payload) {
 		return this.userService.registerNewUser(payload).map(UserResponse::new);
 	}
 
 	@GetMapping(path = "/{userId}")
-	public Mono<UserResponse> getUser(@PathVariable long userId) {
+	public Mono<FullUserResponse> getUser(@PathVariable long userId) {
 		return this.userService.getUser(userId);
-	}
-
-	@GetMapping(path = "/{userId}/profile")
-	public Mono<ProfileResponse> getProfile(@PathVariable long userId) {
-		return this.userService.getProfile(userId);
 	}
 }

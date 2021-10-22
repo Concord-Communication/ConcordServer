@@ -1,7 +1,6 @@
 package io.github.concord_communication.web_server.api.user;
 
-import io.github.concord_communication.web_server.api.user.dto.ProfileResponse;
-import io.github.concord_communication.web_server.api.user.dto.UserResponse;
+import io.github.concord_communication.web_server.api.user.dto.FullUserResponse;
 import io.github.concord_communication.web_server.model.user.User;
 import io.github.concord_communication.web_server.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +17,7 @@ public class SelfController {
 	private final UserService userService;
 
 	@GetMapping
-	public Mono<UserResponse> getSelf(@AuthenticationPrincipal User user) {
-		return Mono.just(new UserResponse(user));
-	}
-
-	@GetMapping(path = "/profile")
-	public Mono<ProfileResponse> getProfile(@AuthenticationPrincipal User user) {
-		return userService.getProfile(user.getId());
+	public Mono<FullUserResponse> getSelf(@AuthenticationPrincipal User user) {
+		return this.userService.getUser(user.getId());
 	}
 }

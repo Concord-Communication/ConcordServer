@@ -5,4 +5,5 @@ package io.github.concord_communication.web_server.model.websocket;
  * the client is still connected and responsive.
  */
 @MessageType("heartbeat")
+@Deprecated
 public record Heartbeat(long timestamp) {}

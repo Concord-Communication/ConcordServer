@@ -6,7 +6,12 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.concord_communication.web_server.model.user.User;
-import io.github.concord_communication.web_server.model.websocket.*;
+import io.github.concord_communication.web_server.model.user.UserStatus;
+import io.github.concord_communication.web_server.model.websocket.ChatMessages;
+import io.github.concord_communication.web_server.model.websocket.ClientMessageEvent;
+import io.github.concord_communication.web_server.model.websocket.Heartbeat;
+import io.github.concord_communication.web_server.model.websocket.MessageType;
+import io.github.concord_communication.web_server.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.reactive.socket.WebSocketHandler;
@@ -41,12 +46,14 @@ public class ClientSocketHandler implements WebSocketHandler {
 
 	private final ClientBroadcastManager broadcastManager;
 	private final ClientMessageHandler messageHandler;
+	private final UserService userService;
+
 	private final Flux<Object> globalMessageFlux;
 
-
-	public ClientSocketHandler(ClientBroadcastManager broadcastManager, ClientMessageHandler messageHandler) {
+	public ClientSocketHandler(ClientBroadcastManager broadcastManager, ClientMessageHandler messageHandler, UserService userService) {
 		this.broadcastManager = broadcastManager;
 		this.messageHandler = messageHandler;
+		this.userService = userService;
 		this.globalMessageFlux = broadcastManager.createGlobalMessageFlux();
 	}
 
@@ -55,7 +62,7 @@ public class ClientSocketHandler implements WebSocketHandler {
 		return session.getHandshakeInfo().getPrincipal().flatMap(p -> {
 			Authentication auth = (Authentication) p;
 			User user = (User) auth.getPrincipal();
-			log.info("User {} has joined via websocket.", user.getUsername());
+			log.info("User \"{}\" has joined via websocket.", user.getUsername());
 			return this.prepareClientCommunication(session, user);
 		});
 	}
@@ -71,22 +78,15 @@ public class ClientSocketHandler implements WebSocketHandler {
 	 */
 	private Mono<Void> prepareClientCommunication(WebSocketSession session, User user) {
 		var userMessageFlux = this.broadcastManager.createUserMessageFlux(user.getId());
-		this.messageHandler.getHeartbeatMonitor().beginTracking(user.getId(), session);
-		Mono<Void> globalMessageSending = session.send(this.globalMessageFlux.map(o -> serialize(o, session)));
-		Mono<Void> personalMessageSending = session.send(Flux.merge(
-				userMessageFlux,
-				Flux.interval(Duration.ofSeconds(10)).flatMap(x -> sendHeartbeat(user.getId()))
-		).map(o -> serialize(o, session)));
-		Flux<Void> messageReceiving = session.receive().flatMap(msg -> deserialize(msg, user)).flatMap(this.messageHandler::handle);
-		Mono<Void> initialMessageSending = Mono.fromRunnable(() -> {
-			this.broadcastManager.sendToAll(new UserMessages.StatusUpdated(user.getId(), "online"));
+		return Mono.when(
+				session.send(this.globalMessageFlux.map(o -> serialize(o, session))),
+				session.send(userMessageFlux.map(o -> serialize(o, session))),
+				session.receive().flatMap(msg -> deserialize(msg, user)).flatMap(this.messageHandler::handle),
+				Mono.delay(Duration.ofSeconds(1)).then(this.userService.updateStatus(user.getId(), UserStatus.OnlineStatus.ONLINE))
+		).onErrorResume(throwable -> {// Handle the connection reset error that is thrown when the client disconnects.
+			log.info("User \"{}\" has disconnected from the websocket: {}.", user.getUsername(), throwable.getMessage());
+			return this.userService.updateStatus(user.getId(), UserStatus.OnlineStatus.OFFLINE);
 		});
-		// TODO: Figure out how to terminate message receiving when heartbeat timeout is reached.
-		return Mono.when(globalMessageSending, personalMessageSending, messageReceiving, initialMessageSending)
-				.doAfterTerminate(() -> {
-					messageHandler.getHeartbeatMonitor().endTracking(user.getId());
-					log.info("User {} has disconnected.", user.getUsername());
-				});
 	}
 
 	private static WebSocketMessage serialize(Object obj, WebSocketSession session) {

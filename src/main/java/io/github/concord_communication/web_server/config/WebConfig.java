@@ -1,6 +1,7 @@
 package io.github.concord_communication.web_server.config;
 
 import io.github.concord_communication.web_server.service.TokenService;
+import io.github.concord_communication.web_server.service.UserService;
 import io.github.concord_communication.web_server.service.websocket.ClientBroadcastManager;
 import io.github.concord_communication.web_server.service.websocket.ClientMessageHandler;
 import io.github.concord_communication.web_server.service.websocket.ClientSocketHandler;
@@ -28,6 +29,7 @@ public class WebConfig implements WebFluxConfigurer {
 	private final TokenService tokenService;
 	private final ClientBroadcastManager clientBroadcastManager;
 	private final ClientMessageHandler clientMessageHandler;
+	private final UserService userService;
 
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
@@ -50,7 +52,7 @@ public class WebConfig implements WebFluxConfigurer {
 	@Bean
 	public HandlerMapping webSocketHandlerMapping() {
 		var mapping = new SimpleUrlHandlerMapping(Map.of(
-				"/client", new ClientSocketHandler(this.clientBroadcastManager, this.clientMessageHandler)
+				"/client", new ClientSocketHandler(this.clientBroadcastManager, this.clientMessageHandler, this.userService)
 		));
 		mapping.setOrder(1);
 		return mapping;
