@@ -20,6 +20,7 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,7 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final SnowflakeIdGenerator idGenerator;
 	private final ReactiveMongoTemplate mongoTemplate;
+	private final FileService fileService;
 
 	private final ClientBroadcastManager broadcastManager;
 
@@ -99,17 +101,6 @@ public class UserService {
 				});
 	}
 
-	public Mono<ProfileResponse> getProfile(long userId) {
-		return profileRepository.findById(userId)
-				.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found.")))
-				.map(profile -> new ProfileResponse(
-						profile.getCreatedAt(),
-						profile.getNickname(),
-						profile.getBio(),
-						profile.getAvatarId()
-				));
-	}
-
 	@Transactional
 	public Mono<Void> updateStatus(long userId, UserStatus.OnlineStatus newStatus) {
 		return statusRepository.findById(userId)
@@ -125,5 +116,22 @@ public class UserService {
 						return Mono.empty();
 					}
 				});
+	}
+
+	@Transactional
+	public Mono<FullUserResponse> updateAvatar(User user, ServerHttpRequest request) {
+		var contentType = request.getHeaders().getContentType();
+		if (contentType == null || !contentType.getType().equalsIgnoreCase("image")) {
+			return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid content type."));
+		}
+		return fileService.saveFile(request)
+				.zipWith(profileRepository.findById(user.getId()))
+				.flatMap(objects -> {
+					var imageId = objects.getT1();
+					var profile = objects.getT2();
+					profile.setAvatarId(imageId);
+					return profileRepository.save(profile);
+				})
+				.flatMap(unused -> getUser(user.getId()));
 	}
 }

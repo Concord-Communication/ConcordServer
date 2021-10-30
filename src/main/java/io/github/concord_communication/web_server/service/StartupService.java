@@ -2,11 +2,16 @@ package io.github.concord_communication.web_server.service;
 
 import io.github.concord_communication.web_server.api.dto.ChannelCreationPayload;
 import io.github.concord_communication.web_server.api.user.dto.UserRegistrationPayload;
+import io.github.concord_communication.web_server.dao.ServerRepository;
+import io.github.concord_communication.web_server.model.Server;
 import io.github.concord_communication.web_server.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -24,6 +29,8 @@ public class StartupService implements ApplicationRunner {
 	private final ReactiveMongoTemplate mongoTemplate;
 	private final UserService userService;
 	private final ChannelService channelService;
+	private final FileService fileService;
+	private final ServerRepository serverRepository;
 
 	@Override
 	public void run(ApplicationArguments args) {
@@ -42,6 +49,10 @@ public class StartupService implements ApplicationRunner {
 				.then()
 				.block();
 		log.info("Dropped all collections.");
+		var imgData = DataBufferUtils.read(new ClassPathResource("images/concord_icon_256.png"), new DefaultDataBufferFactory(true), 8096);
+		Long avatarId = fileService.saveFile(imgData, "image/png").block();
+		serverRepository.save(new Server("My Concord Server", "This is my Concord server. Edit this description to say something cool!", avatarId)).block();
+		log.info("Created initial server data.");
 		var userData = new UserRegistrationPayload("admin", StringUtils.random(40));
 		var adminUser = this.userService.registerNewUser(Mono.just(userData)).block();
 		log.info("Registered default admin user \"{}\" with password \"{}\".", userData.username(), userData.password());
