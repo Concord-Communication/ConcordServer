@@ -42,6 +42,7 @@ public class FileService {
 		return gridFsTemplate.getResource(String.valueOf(imageId))
 				.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
 				.flatMap(resource -> {
+					if (!resource.exists()) return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND));
 					response.getHeaders().setContentType(MediaType.IMAGE_JPEG);
 					response.setStatusCode(HttpStatus.OK);
 					return response.writeWith(resource.getDownloadStream());

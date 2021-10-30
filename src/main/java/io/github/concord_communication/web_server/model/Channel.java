@@ -1,6 +1,5 @@
 package io.github.concord_communication.web_server.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -8,6 +7,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -17,7 +18,6 @@ import java.util.Set;
 @Document
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 public class Channel {
 	@Id
 	private long id;
@@ -63,4 +63,30 @@ public class Channel {
 	 * The user who created the channel.
 	 */
 	private long createdByUserId;
+
+	/**
+	 * A map that associates user ids with a specific set of rights that the
+	 * user gets, only in the context of this channel or any child channels.
+	 */
+	private Map<Long, Long> userRightsIds;
+
+	/**
+	 * A map that associates role ids with a specific set of rights that all
+	 * users of the role get, only in the context of this channel or any child
+	 * channels.
+	 */
+	private Map<Long, Long> roleRightsIds;
+
+	public Channel(long id, Long parentChannelId, int ordinality, String name, String description, Set<String> capabilities, long createdAt, long createdByUserId) {
+		this.id = id;
+		this.parentChannelId = parentChannelId;
+		this.ordinality = ordinality;
+		this.name = name;
+		this.description = description;
+		this.capabilities = capabilities;
+		this.createdAt = createdAt;
+		this.createdByUserId = createdByUserId;
+		this.userRightsIds = new HashMap<>();
+		this.roleRightsIds = new HashMap<>();
+	}
 }

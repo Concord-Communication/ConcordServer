@@ -5,12 +5,14 @@ import io.github.concord_communication.web_server.api.user.dto.FullUserResponse;
 import io.github.concord_communication.web_server.api.user.dto.ProfileResponse;
 import io.github.concord_communication.web_server.api.user.dto.StatusResponse;
 import io.github.concord_communication.web_server.api.user.dto.UserRegistrationPayload;
+import io.github.concord_communication.web_server.dao.RightsRepository;
 import io.github.concord_communication.web_server.dao.UserProfileRepository;
 import io.github.concord_communication.web_server.dao.UserRepository;
 import io.github.concord_communication.web_server.dao.UserStatusRepository;
 import io.github.concord_communication.web_server.model.user.User;
 import io.github.concord_communication.web_server.model.user.UserProfile;
 import io.github.concord_communication.web_server.model.user.UserStatus;
+import io.github.concord_communication.web_server.model.user.rights.Rights;
 import io.github.concord_communication.web_server.model.websocket.UserMessages;
 import io.github.concord_communication.web_server.service.websocket.ClientBroadcastManager;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,7 @@ public class UserService {
 	private final UserRepository userRepository;
 	private final UserProfileRepository profileRepository;
 	private final UserStatusRepository statusRepository;
+	private final RightsRepository rightsRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final SnowflakeIdGenerator idGenerator;
 	private final ReactiveMongoTemplate mongoTemplate;
@@ -73,16 +76,17 @@ public class UserService {
 	public Mono<User> registerNewUser(Mono<UserRegistrationPayload> payload) {
 		return payload.flatMap(p -> this.userRepository.findByUsername(p.username())
 				.flatMap(existingUser -> Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is taken.")))
-				.switchIfEmpty(
-					this.userRepository.save(new User(
-							idGenerator.next(),
-							p.username(),
-							this.passwordEncoder.encode(p.password())
-					))
-					.flatMap(user -> Mono.when(
-							this.profileRepository.save(new UserProfile(user)),
-							this.statusRepository.save(new UserStatus(user))
-					).thenReturn(user).doOnSuccess(u -> broadcastManager.sendToAll(new UserMessages.Joined(u.getId()))))
+				.switchIfEmpty(this.rightsRepository.save(new Rights(idGenerator.next()))
+						.flatMap(rights -> this.userRepository.save(new User(
+								idGenerator.next(),
+								p.username(),
+								this.passwordEncoder.encode(p.password())
+						)).flatMap(user -> Mono.when(
+								this.profileRepository.save(new UserProfile(user, rights.getId())),
+								this.statusRepository.save(new UserStatus(user))
+						).thenReturn(user)
+								.doOnSuccess(u -> broadcastManager.sendToAll(new UserMessages.Joined(u.getId())))
+						))
 				)
 				.cast(User.class)
 		);

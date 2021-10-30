@@ -2,7 +2,10 @@ package io.github.concord_communication.web_server.service;
 
 import io.github.concord_communication.web_server.api.dto.ChannelCreationPayload;
 import io.github.concord_communication.web_server.api.user.dto.UserRegistrationPayload;
+import io.github.concord_communication.web_server.dao.RightsRepository;
 import io.github.concord_communication.web_server.dao.ServerRepository;
+import io.github.concord_communication.web_server.dao.UserProfileRepository;
+import io.github.concord_communication.web_server.dao.UserRepository;
 import io.github.concord_communication.web_server.model.Server;
 import io.github.concord_communication.web_server.util.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +34,8 @@ public class StartupService implements ApplicationRunner {
 	private final ChannelService channelService;
 	private final FileService fileService;
 	private final ServerRepository serverRepository;
+	private final UserProfileRepository profileRepository;
+	private final RightsRepository rightsRepository;
 
 	@Override
 	public void run(ApplicationArguments args) {
@@ -55,6 +60,10 @@ public class StartupService implements ApplicationRunner {
 		log.info("Created initial server data.");
 		var userData = new UserRegistrationPayload("admin", StringUtils.random(40));
 		var adminUser = this.userService.registerNewUser(Mono.just(userData)).block();
+		var adminUserProfile = this.profileRepository.findById(adminUser.getId()).block();
+		var adminUserRights = this.rightsRepository.findById(adminUserProfile.getRightsId()).block();
+		adminUserRights.setAdmin(true);
+		this.rightsRepository.save(adminUserRights).block();
 		log.info("Registered default admin user \"{}\" with password \"{}\".", userData.username(), userData.password());
 		var channelData = new ChannelCreationPayload("general", "The default chat channel", null, 0, Set.of("text"));
 		var channel = this.channelService.createChannel(Mono.just(channelData), adminUser).block();
