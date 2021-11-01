@@ -1,10 +1,7 @@
 package io.github.concord_communication.web_server.service;
 
 import de.mkammerer.snowflakeid.SnowflakeIdGenerator;
-import io.github.concord_communication.web_server.api.user.dto.FullUserResponse;
-import io.github.concord_communication.web_server.api.user.dto.ProfileResponse;
-import io.github.concord_communication.web_server.api.user.dto.StatusResponse;
-import io.github.concord_communication.web_server.api.user.dto.UserRegistrationPayload;
+import io.github.concord_communication.web_server.api.user.dto.*;
 import io.github.concord_communication.web_server.dao.RightsRepository;
 import io.github.concord_communication.web_server.dao.UserProfileRepository;
 import io.github.concord_communication.web_server.dao.UserRepository;
@@ -137,5 +134,13 @@ public class UserService {
 					return profileRepository.save(profile);
 				})
 				.flatMap(unused -> getUser(user.getId()));
+	}
+
+	@Transactional
+	public Mono<Void> updatePassword(User user, Mono<UpdatePasswordPayload> payload) {
+		return payload.flatMap(data -> {
+			user.setPasswordHash(passwordEncoder.encode(data.newPassword()));
+			return userRepository.save(user);
+		}).then();
 	}
 }

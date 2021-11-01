@@ -2,6 +2,7 @@ package io.github.concord_communication.web_server.model.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -37,6 +38,7 @@ public class User implements UserDetails {
 	 * The user's password hash.
 	 */
 	@JsonIgnore
+	@Setter
 	private String passwordHash;
 
 	public User(long id, String username, String passwordHash) {
