@@ -1,0 +1,19 @@
+{
+  "name": "concord-server-docs",
+  "version": "0.0.1",
+  "description": "Documentation for the Concord Server and communication protocol.",
+  "main": "index.js",
+  "authors": {
+    "name": "Andrew Lalis",
+    "email": "andrewlalisofficial@gmail.com"
+  },
+  "repository": "https://github.com/Concord-Communication/ConcordServer/concord-server-docs",
+  "scripts": {
+    "dev": "vuepress dev src",
+    "build": "vuepress build src"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "vuepress": "^1.5.3"
+  }
+}
