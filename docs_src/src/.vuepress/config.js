@@ -49,7 +49,11 @@ module.exports = {
 	logo: '/concord_icon.png',
 	sidebar: {
       '/server/': ['', 'quick-start'],
-	  '/rest-api/': 'auto',
+	  '/rest-api/': [
+		'',
+		'user-endpoints',
+		'images'
+	  ],
 	  '/websocket-api/': ['', 'chat-messages']
     },
 	smoothScroll: true
