@@ -24,7 +24,7 @@ public class SecurityConfig {
 				.pathMatchers("/client").permitAll()
 				// Disable authentication for token endpoints, since unauthenticated users get tokens via these.
 				// Also allow unauthenticated users to register an account.
-				.pathMatchers("/api/tokens/**", "/api/users/register").permitAll()
+				.pathMatchers("/api/tokens", "/api/users/register").permitAll()
 				// Require authentication for all endpoints by default.
 				.pathMatchers("/**").authenticated()
 				.and()

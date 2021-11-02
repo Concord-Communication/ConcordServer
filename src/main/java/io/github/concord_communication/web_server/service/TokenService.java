@@ -1,11 +1,15 @@
 package io.github.concord_communication.web_server.service;
 
+import io.github.concord_communication.web_server.api.user.dto.TokenResponse;
 import io.github.concord_communication.web_server.model.user.User;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,15 +41,16 @@ public class TokenService {
 				.build();
 	}
 
-	public String createToken(Authentication auth) {
+	public Mono<TokenResponse> createToken(Authentication auth) {
 		User user = (User) auth.getPrincipal();
-		return Jwts.builder()
+		return Mono.fromCallable(() -> Jwts.builder()
 				.setSubject(user.getUsername())
 				.claim("id", user.getId())
 				.setExpiration(Date.from(Instant.now().plus(this.tokenValidity, ChronoUnit.DAYS)))
 				.setIssuer("Concord")
 				.signWith(getPrivateKey())
-				.compact();
+				.compact())
+				.map(TokenResponse::new);
 	}
 
 	public Authentication getAuthentication(String token) {
@@ -58,6 +63,14 @@ public class TokenService {
 		var claims = jws.getBody();
 		var user = new User(claims.get("id", Long.class), claims.getSubject(), null);
 		return new UsernamePasswordAuthenticationToken(user, token, new ArrayList<>());
+	}
+
+	public String extractToken(ServerHttpRequest request) {
+		String bearerToken = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+		if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+			return bearerToken.substring(7);
+		}
+		return null;
 	}
 
 	private PrivateKey getPrivateKey() {
