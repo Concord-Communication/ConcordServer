@@ -128,4 +128,4 @@ Sample success response:
 }
 ```
 
-> Note: The user's avatar image can be fetched via [`/images/<avatarId>`](/rest-api/images#get-image).
+> Note: The user's avatar image can be fetched via [`/images/<avatarId>`](images.md#get-image).
