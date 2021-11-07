@@ -82,6 +82,7 @@ public class ClientSocketHandler implements WebSocketHandler {
 				session.send(this.globalMessageFlux.map(o -> serialize(o, session))),
 				session.send(userMessageFlux.map(o -> serialize(o, session))),
 				session.receive().flatMap(msg -> deserialize(msg, user)).flatMap(this.messageHandler::handle),
+				session.closeStatus().then(Mono.error(new IOException("User closed the connection."))),
 				Mono.delay(Duration.ofSeconds(1)).then(this.userService.updateStatus(user.getId(), UserStatus.OnlineStatus.ONLINE))
 		).onErrorResume(throwable -> {// Handle the connection reset error that is thrown when the client disconnects.
 			log.info("User \"{}\" has disconnected from the websocket: {}.", user.getUsername(), throwable.getMessage());

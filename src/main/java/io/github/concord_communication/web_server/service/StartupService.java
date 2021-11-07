@@ -5,7 +5,6 @@ import io.github.concord_communication.web_server.api.user.dto.UserRegistrationP
 import io.github.concord_communication.web_server.dao.RightsRepository;
 import io.github.concord_communication.web_server.dao.ServerRepository;
 import io.github.concord_communication.web_server.dao.UserProfileRepository;
-import io.github.concord_communication.web_server.dao.UserRepository;
 import io.github.concord_communication.web_server.model.Server;
 import io.github.concord_communication.web_server.util.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +55,8 @@ public class StartupService implements ApplicationRunner {
 		log.info("Dropped all collections.");
 		var imgData = DataBufferUtils.read(new ClassPathResource("images/concord_icon_256.png"), new DefaultDataBufferFactory(true), 8096);
 		Long avatarId = fileService.saveFile(imgData, "image/png").block();
-		serverRepository.save(new Server("My Concord Server", "This is my Concord server. Edit this description to say something cool!", avatarId)).block();
+		Server server = new Server("My Concord Server", "This is my Concord server. Edit this description to say something cool!", avatarId);
+		server = serverRepository.save(server).block();
 		log.info("Created initial server data.");
 		var userData = new UserRegistrationPayload("admin", StringUtils.random(40));
 		var adminUser = this.userService.registerNewUser(Mono.just(userData)).block();
@@ -68,5 +68,7 @@ public class StartupService implements ApplicationRunner {
 		var channelData = new ChannelCreationPayload("general", "The default chat channel", null, 0, Set.of("text"));
 		var channel = this.channelService.createChannel(Mono.just(channelData), adminUser).block();
 		log.info("Created default #{} channel.", channel.name());
+		server.setDefaultChannelId(channel.id());
+		serverRepository.save(server).block();
 	}
 }

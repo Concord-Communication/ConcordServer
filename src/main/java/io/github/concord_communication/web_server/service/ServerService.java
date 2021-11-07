@@ -15,6 +15,6 @@ public class ServerService {
 	@Transactional(readOnly = true)
 	public Mono<ServerResponse> getServerData() {
 		return this.serverRepository.findById(0L)
-				.map(server -> new ServerResponse(server.getName(), server.getDescription(), server.getIconId()));
+				.map(server -> new ServerResponse(server.getName(), server.getDescription(), server.getIconId(), server.getDefaultChannelId()));
 	}
 }

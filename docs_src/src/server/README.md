@@ -10,3 +10,6 @@ The Concord Server is a high-performance asynchronous web server that supports b
 
 To get up and running, check out the [quick-start guide](quick-start.md).
 
+## System Overview
+
+Concord is designed to be a completely open, transparent communication platform that's efficient and easy to use. To accomplish this goal, we provide a server that you can run out-of-the-box, as well as a number of official client applications for various platforms. The server is built using Java 17 and [Spring WebFlux](https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html) for powering its asynchronous REST and Websocket APIs, and uses MongoDB as its primary data source.

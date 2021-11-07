@@ -18,15 +18,9 @@ Here's a barebones Javascript example that connects to a Concord server running 
 ```javascript
 const token = "YOUR-TOKEN-HERE";
 let ws = new WebSocket("ws://localhost:8080/client?token=" + token);
-ws.onopen = () => {
-    console.log("Opened websocket connection.");
-};
-ws.onmessage = (msg) => {
-    console.log(msg.data);
-};
-ws.onclose = () => {
-    console.log("Closed.");
-};
+ws.onopen = () => console.log("Opened websocket connection.");
+ws.onmessage = (msg) => console.log(msg.data);
+ws.onclose = () => console.log("Closed.");
 ```
 
 ## Standard Practices

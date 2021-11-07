@@ -2,6 +2,7 @@ package io.github.concord_communication.web_server.model;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -35,9 +36,17 @@ public class Server {
 	 */
 	private Long iconId;
 
+	/**
+	 * The id of the channel that users should be directed to first, upon
+	 * joining the server for the first time.
+	 */
+	@Setter
+	private Long defaultChannelId;
+
 	public Server(String name, String description, Long iconId) {
 		this.name = name;
 		this.description = description;
 		this.iconId = iconId;
+		this.defaultChannelId = null;
 	}
 }
