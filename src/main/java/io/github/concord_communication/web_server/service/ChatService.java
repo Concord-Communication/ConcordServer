@@ -56,7 +56,7 @@ public class ChatService {
 				.map(ChatResponse::new);
 	}
 
-	public Flux<ChatResponse> searchChats(int page, int size, Long authorId, Long channelId, Long threadId, String textQuery) {
+	public Flux<ChatResponse> searchChats(int page, int size, Long authorId, Long channelId, Long threadId, Long before, Long after, String textQuery) {
 		Query q = new Query();
 		if (authorId != null) q.addCriteria(Criteria.where("authorId").is(authorId));
 		if (channelId != null) q.addCriteria(Criteria.where("channelId").is(channelId));
@@ -64,6 +64,8 @@ public class ChatService {
 			Long targetValue = threadId == -1 ? null : threadId;
 			q.addCriteria(Criteria.where("threadId").is(targetValue));
 		}
+		if (before != null) q.addCriteria(Criteria.where("createdAt").lt(before));
+		if (after != null) q.addCriteria(Criteria.where("createdAt").gt(after));
 		if (textQuery != null && !textQuery.isBlank()) {
 			q.addCriteria(TextCriteria.forDefaultLanguage().matchingAny(textQuery));
 		}

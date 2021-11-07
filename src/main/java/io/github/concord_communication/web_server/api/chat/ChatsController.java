@@ -38,8 +38,10 @@ public class ChatsController {
 			@RequestParam(required = false) Long authorId,
 			@RequestParam(required = false) Long channelId,
 			@RequestParam(required = false) Long threadId,
+			@RequestParam(required = false) Long before,
+			@RequestParam(required = false) Long after,
 			@RequestParam(required = false) String query
 	) {
-		return this.chatService.searchChats(page, size, authorId, channelId, threadId, query);
+		return this.chatService.searchChats(page, size, authorId, channelId, threadId, before, after, query);
 	}
 }
