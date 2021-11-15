@@ -48,7 +48,7 @@ module.exports = {
     ],
 	logo: '/concord_icon.png',
 	sidebar: {
-      '/server/': ['', 'quick-start'],
+      '/server/': ['', 'quick-start', 'configuration'],
 	  '/rest-api/': [
 		'',
 		'user-endpoints',

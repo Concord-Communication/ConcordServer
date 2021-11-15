@@ -45,4 +45,19 @@ openssl rsa -in private_key.pem -pubout -outform DER -out public_key.der
 
 ## Startup & Configuration
 
-When starting the server for the first time, provide the `--reset` flag, which will tell the server to generate all of the basic server information, and a new admin user with a randomly-generated password. You can use this user's credentials to log in. It's highly advised that you change the password to this account as soon as possible.
+When starting the server for the first time, provide the `--reset` flag as a program argument, which will tell the server to generate all of the basic server information, and a new admin user with a randomly-generated password. You can use this user's credentials to log in. It's highly advised that you change the password to this account as soon as possible.
+
+::: tip
+
+If you open the project in an IDE like IntelliJ or Eclipse, you will need to edit a run configuration to add the `--reset` flag.
+
+:::
+
+Don't forget to remove the flag once you've done that, otherwise the server will generate new data each time it starts, which can get annoying since a new password is generated each time.
+
+### Configuration
+
+In general, Concord Server follows the conventions of the Spring framework for configuration, and we recommend that you define your configuration in a `./config/application.properties` file, relative to the working directory of the server. Here, you can specify any configuration settings you'd like, and they will override the default settings that Concord ships with.
+
+For more information on all of the available configuration properties and what they mean, please check the page on [server configuration](configuration.md).
+
