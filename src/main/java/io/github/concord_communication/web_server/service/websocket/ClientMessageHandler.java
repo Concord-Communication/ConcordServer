@@ -5,9 +5,7 @@ import io.github.concord_communication.web_server.api.dto.ReactionPayload;
 import io.github.concord_communication.web_server.model.websocket.ChatMessages;
 import io.github.concord_communication.web_server.model.websocket.ClientMessageEvent;
 import io.github.concord_communication.web_server.service.ChatService;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -21,24 +19,18 @@ public class ClientMessageHandler {
 	private final ClientBroadcastManager broadcastManager;
 	private final ChatService chatService;
 
-	@Getter
-	private final ClientHeartbeatMonitor heartbeatMonitor;
-
-	@Value("${concord.socket.heartbeat-timeout-seconds}")
-	private long heartbeatTimeoutSeconds;
-
 	public ClientMessageHandler(ClientBroadcastManager broadcastManager, ChatService chatService) {
 		this.broadcastManager = broadcastManager;
 		this.chatService = chatService;
-		this.heartbeatMonitor = new ClientHeartbeatMonitor(heartbeatTimeoutSeconds, broadcastManager);
 	}
 
+	/**
+	 * Handles a client message that was received over the websocket.
+	 * @param event The message event.
+	 * @return A mono that completes when the message is handled.
+	 */
 	public Mono<Void> handle(ClientMessageEvent event) {
 		switch (event.type()) {
-			case "heartbeat" -> {
-				this.heartbeatMonitor.registerHeartbeat(event.user().getId());
-				return Mono.empty();
-			}
 			case "chat_written" -> {
 				ChatMessages.Written chat = event.getMessage();
 				return chatService.sendChatFromWebsocket(chat.channelId(), new ChatPayload(chat.sentAt(), chat.threadId(), chat.content()), event.user());

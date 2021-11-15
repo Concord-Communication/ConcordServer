@@ -10,8 +10,17 @@ import org.springframework.context.annotation.Configuration;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
+/**
+ * Configuration that is used for defining some extra beans that other config
+ * classes may depend on.
+ */
 @Configuration
 public class BeanConfig {
+	/**
+	 * Defines an id generator bean which can be used to generate monotonic,
+	 * unique 64-bit identifiers for entities.
+	 * @return The snowflake id generator.
+	 */
 	@Bean
 	public SnowflakeIdGenerator snowflakeIdGenerator() {
 		return SnowflakeIdGenerator.createCustom(

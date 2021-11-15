@@ -2,10 +2,7 @@ package io.github.concord_communication.web_server.config;
 
 import io.github.concord_communication.web_server.service.TokenService;
 import io.github.concord_communication.web_server.service.UserService;
-import io.github.concord_communication.web_server.service.websocket.ClientBroadcastManager;
-import io.github.concord_communication.web_server.service.websocket.ClientMessageHandler;
-import io.github.concord_communication.web_server.service.websocket.ClientSocketHandler;
-import io.github.concord_communication.web_server.service.websocket.WebSocketAuthenticationStrategy;
+import io.github.concord_communication.web_server.service.websocket.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +19,9 @@ import org.springframework.web.reactive.socket.server.support.HandshakeWebSocket
 
 import java.util.Map;
 
+/**
+ * Web configuration for this application.
+ */
 @Configuration
 @EnableWebFlux
 @RequiredArgsConstructor
@@ -30,6 +30,7 @@ public class WebConfig implements WebFluxConfigurer {
 	private final ClientBroadcastManager clientBroadcastManager;
 	private final ClientMessageHandler clientMessageHandler;
 	private final UserService userService;
+	private final MessageSerializer messageSerializer;
 
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
@@ -52,7 +53,7 @@ public class WebConfig implements WebFluxConfigurer {
 	@Bean
 	public HandlerMapping webSocketHandlerMapping() {
 		var mapping = new SimpleUrlHandlerMapping(Map.of(
-				"/client", new ClientSocketHandler(this.clientBroadcastManager, this.clientMessageHandler, this.userService)
+				"/client", new ClientSocketHandler(this.clientBroadcastManager, this.clientMessageHandler, this.userService, this.messageSerializer)
 		));
 		mapping.setOrder(1);
 		return mapping;

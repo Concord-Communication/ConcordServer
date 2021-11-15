@@ -8,6 +8,11 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+/**
+ * A security filter that checks for the presence of a JWT authentication token
+ * and if found, adds a user authentication instance to the current web exchange
+ * security context.
+ */
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter implements WebFilter {
 	private final TokenService tokenService;

@@ -39,6 +39,11 @@ public class ChatService {
 	private final ClientBroadcastManager broadcastManager;
 	private final ReactiveMongoTemplate mongoTemplate;
 
+	/**
+	 * Gets a single chat by its id.
+	 * @param chatId The id of the chat to fetch.
+	 * @return A mono that contains the chat response, or a 404 error.
+	 */
 	public Mono<ChatResponse> getChat(long chatId) {
 		return this.chatRepository.findById(chatId)
 				.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Chat not found.")))
@@ -56,6 +61,18 @@ public class ChatService {
 				.map(ChatResponse::new);
 	}
 
+	/**
+	 * Searches through chats.
+	 * @param page The page of results to show.
+	 * @param size The size of results.
+	 * @param authorId The id of the author to filter by.
+	 * @param channelId The id of the channel to filter by.
+	 * @param threadId The id of the thread to filter by.
+	 * @param before A timestamp that filters to only chats before it.
+	 * @param after A timestamp that filters to only chats after it.
+	 * @param textQuery A full-text string to match messages against.
+	 * @return A list of chats matching the criteria.
+	 */
 	public Flux<ChatResponse> searchChats(int page, int size, Long authorId, Long channelId, Long threadId, Long before, Long after, String textQuery) {
 		Query q = new Query();
 		if (authorId != null) q.addCriteria(Criteria.where("authorId").is(authorId));
@@ -73,6 +90,14 @@ public class ChatService {
 		return this.mongoTemplate.find(q, Chat.class).map(ChatResponse::new);
 	}
 
+	/**
+	 * Sends a new chat in a channel.
+	 * @param channelId The id of the channel to send the chat to.
+	 * @param payload The chat data.
+	 * @param user The user who is sending the message.
+	 * @return A chat response for the chat that was created, or a 400 bad
+	 * request error if the chat couldn't be sent.
+	 */
 	@Transactional
 	public Mono<ChatResponse> sendChat(long channelId, Mono<ChatPayload> payload, User user) {
 		return payload.flatMap(data -> sendChat(channelId, data, user))
@@ -80,6 +105,13 @@ public class ChatService {
 				.map(ChatResponse::new);
 	}
 
+	/**
+	 * Sends a chat in a new channel, from the context of a websocket.
+	 * @param channelId The id of the channel to send the chat to.
+	 * @param payload The chat data.
+	 * @param user The user who is sending the message.
+	 * @return A mono that's complete when the chat is sent.
+	 */
 	@Transactional
 	public Mono<Void> sendChatFromWebsocket(long channelId, ChatPayload payload, User user) {
 		return sendChat(channelId, payload, user)
@@ -97,6 +129,14 @@ public class ChatService {
 				.doOnSuccess(chat -> broadcastManager.sendToAll(new ChatMessages.Sent(chat)));
 	}
 
+	/**
+	 * Edits a user's chat message. When the message is edited, the server sends
+	 * a message to all clients indicating that the message has been updated.
+	 * @param chatId The id of the chat to edit.
+	 * @param payloadMono The data about the edit.
+	 * @param user The user who's editing their chat message.
+	 * @return A response containing the updated chat.
+	 */
 	@Transactional
 	public Mono<ChatResponse> editChat(long chatId, Mono<ChatEditPayload> payloadMono, User user) {
 		return payloadMono.flatMap(payload -> chatRepository.findById(chatId)
@@ -112,18 +152,39 @@ public class ChatService {
 				.map(ChatResponse::new));
 	}
 
+	/**
+	 * Removes a chat. Sends a message to all connected clients that the chat
+	 * has been removed.
+	 * @param chatId The id of the chat to remove.
+	 * @return A mono that completes when the chat is removed.
+	 */
 	public Mono<Void> removeChat(long chatId) {
 		return this.chatRepository.findById(chatId)
 				.flatMap(chat -> this.chatRepository.delete(chat)
 						.doOnSuccess(unused -> this.broadcastManager.sendToAll(new ChatMessages.Deleted(chat))));
 	}
 
+	/**
+	 * Gets the set of reactions for a chat. This includes the standard reaction
+	 * information (number of votes per reaction), and additionally shows which
+	 * user has given each reaction.
+	 * @param chatId The id of the chat to fetch reactions for.
+	 * @return The reaction data.
+	 */
 	public Mono<ReactionsResponse> getReactions(long chatId) {
 		return chatRepository.findById(chatId)
 				.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Chat not found.")))
 				.map(chat -> new ReactionsResponse(chat.getReactions(), chat.getReactionCounts()));
 	}
 
+	/**
+	 * Adds a reaction to a chat message. Sends a message to every connected
+	 * client to inform them of this reaction.
+	 * @param chatId The id of the chat to add a reaction to.
+	 * @param payload The reaction data.
+	 * @param user The user who's adding a reaction.
+	 * @return A mono that completes when the reaction has been added.
+	 */
 	@Transactional
 	public Mono<Void> addReaction(long chatId, Mono<ReactionPayload> payload, User user) {
 		return payload.flatMap(data -> chatRepository.findById(chatId)
